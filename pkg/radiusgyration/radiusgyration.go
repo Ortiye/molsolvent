@@ -1,3 +1,4 @@
+// Package radiusgyration calculates the radius of gyration of a molecule.
 package radiusgyration
 
 import (
