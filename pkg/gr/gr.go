@@ -178,7 +178,7 @@ func (g *GR) start(r *bufio.Reader) {
 	for {
 		g.mux.Lock()
 		g.cfg++
-		if g.cfg >= g.CfgStart || g.err != nil {
+		if g.cfg >= g.CfgEnd || g.err != nil {
 			break
 		}
 
@@ -264,7 +264,7 @@ func (g *GR) write(w io.Writer) error {
 
 	// Write the results
 	// Header
-	fmt.Fprint(w, "t ")
+	fmt.Fprint(w, "dist ")
 
 	var orderList [][2]string
 	orderListIncr := make(map[[2]string]int)
