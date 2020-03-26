@@ -10,6 +10,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/ortiye/molsolvent/pkg/util"
 
@@ -119,6 +120,8 @@ func (v *Volume) Start() error {
 	defer out.Close()
 	out.WriteString("cfg t vol(atoms) vol(other)\n")
 
+	tFirst := time.Now()
+
 	err = util.ReadCfgNonCvg(r, v.CfgStart)
 	if err != nil {
 		return fmt.Errorf("ReadCfgNonCvg: %w", err)
@@ -131,6 +134,9 @@ func (v *Volume) Start() error {
 	v.calc(out, v.CfgStart, box, xyz)
 	v.cfg = v.CfgStart
 
+	tFirstDur := time.Since(tFirst)
+	tOther := time.Now()
+
 	for i := 0; i < (runtime.NumCPU() - 1); i++ {
 		v.wg.Add(1)
 		go v.start(r, out)
@@ -139,6 +145,9 @@ func (v *Volume) Start() error {
 	v.wg.Add(1)
 	v.start(r, out)
 	v.wg.Wait()
+
+	tOtherDur := time.Since(tOther)
+	fmt.Fprintf(out, "\nTime (first): %s\nTime (other): %s\nTime (total): %s\n", tFirstDur, tOtherDur, (tFirstDur + tOtherDur))
 
 	if v.err != nil {
 		return v.err
