@@ -64,17 +64,28 @@ func New(path string) (Cfg, error) {
 func (c Cfg) Start(log *log.Logger) {
 	var wg sync.WaitGroup
 	for step, types := range c.Types {
-		for rtn, name := range types { // For each calculation
-			wg.Add(1)
-			go func(step, rtn int, name string) {
-				err := Launch(name, c.Files[step][rtn])
-				if err != nil {
-					log.Println(fmt.Errorf("Launch (step %d, routine %d): %w", step, rtn, err))
-				}
+		if len(types) == 0 {
+			continue
+		}
 
-				wg.Done()
-			}(step, rtn, name)
+		if len(types) > 1 {
+			for rtn, name := range types[1:] { // For each calculation
+				wg.Add(1)
+				go func(step, rtn int, name string) {
+					err := Launch(name, c.Files[step][rtn])
+					if err != nil {
+						log.Println(fmt.Errorf("Launch (step %d, routine %d): %w", step, rtn, err))
+					}
 
+					wg.Done()
+				}(step, rtn, name)
+
+			}
+		}
+
+		err := Launch(types[0], c.Files[step][0])
+		if err != nil {
+			log.Println(fmt.Errorf("Launch (step %d, routine %d): %w", step, 0, err))
 		}
 		wg.Wait()
 	}
