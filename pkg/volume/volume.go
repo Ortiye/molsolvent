@@ -285,28 +285,25 @@ func (v *Volume) calc(w io.Writer, cfg int, box [3]float64, xyz XYZ) {
 						if dist < distTmp {
 							distTmp = dist
 							ptsTmp = false
+							break // We don't longer need to check
 						}
+					}
+
+					if !ptsTmp {
+						break // We don't longer need to check because it's sure that ptsTmp is false.
 					}
 				}
 
-				pts[lit] = ptsTmp
+				if ptsTmp {
+					pts[lit] = ptsTmp
+				}
 			}
 		}
 	}
 
-	var volAt float64
-	var volOt float64
 	volBloc := v.Bloc[0] * v.Bloc[1] * v.Bloc[2]
-	for _, b := range pts {
-		if b {
-			volAt += volBloc
-		} else {
-			volOt += volBloc
-		}
-	}
-
-	remaining := boxBlocs[0]*boxBlocs[1]*boxBlocs[2] - len(pts)
-	volOt += float64(remaining) * volBloc
+	volAt := volBloc * float64(len(pts))
+	volOt := (box[0] * box[1] * box[2]) - volAt
 
 	fmt.Fprintf(w, "%d %g %g %g\n", cfg, float64(cfg)*v.Dt, volAt, volOt)
 
@@ -315,7 +312,7 @@ func (v *Volume) calc(w io.Writer, cfg int, box [3]float64, xyz XYZ) {
 	}
 }
 
-// for test purposes only.
+// for test purpose only.
 func (v *Volume) xyz(pts map[[3]float64]bool) error {
 	f, err := os.Create(v.FileOutXYZ)
 	if err != nil {
